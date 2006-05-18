@@ -1,0 +1,112 @@
+  Hello,
+
+How can I convert a dictionary into a HTTP POST string?
+I have an example below, but this is not working correctly for special
+characters. (" ' and others). In other words, if I use "Bessy's cat"
+instead of "Bessy" then the http server will parse that to "Bessy&#39;s cat"
+Probably the problem is that I should not use urllib.quote but something
+else.
+Can you please advise?
+
+  Laszlo
+
+form_values = {'name':'Bessy','age':'10','gender':'female'}
+for key,value in form_values.iteritems():
+   values.append('%s=%s' % (urllib.quote(key),urllib.quote(value)) )
+
+values.append('x=33')
+values.append('y=14')
+post_data = ('&'.join(values)).replace('/','%2F')
+txheaders = {
+
+'Accept':'text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5',
+           'Accept-Language':'en,hu;q=0.8,en-us;q=0.5,hu-hu;q=0.3',
+           'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
+}
+req = urllib2.Request(url, post_data, txheaders)
+u = urllib2.build_opener()
+req.add_data(post_data)
+page2 = self.download(action,post_data,{
+ 'Content-Type': 'application/x-www-form-urlencoded'
+})
+openerdirector = u.open(req)
+data = openerdirector.read()
+
+Laszlo Zsolt Nagy enlightened us with:
+> How can I convert a dictionary into a HTTP POST string?  I have an
+> example below, but this is not working correctly for special
+> characters. (" ' and others).
+
+URL-quote it.
+
+> In other words, if I use "Bessy's cat" instead of "Bessy" then the
+> http server will parse that to "Bessy&#39;s cat"
+
+The HTTP server won't perform HTML-quoting out of thin air.
+
+> Probably the problem is that I should not use urllib.quote but
+> something else.
+
+URL-quoting is the right thing to do:
+
+In [1]: import urllib
+
+In [2]: urllib.quote("Bessy's cat")
+Out[2]: 'Bessy%27s%20cat'
+
+If you want to give yourself an example of how it's done, run a
+network sniffer and post something to a website.
+
+Sybren
+--
+The problem with the world is stupidity. Not saying there should be a
+capital punishment for stupidity, but why don't we just take the
+safety labels off of everything and let the problem solve itself?
+                                            Frank Zappa
+
+See urllib.urlencode(). No idea why they don't include it in urllib2 as
+well, but there you go.
+
+ >>> from urllib import urlencode
+ >>> urlencode({'a':'& "Simple string"', 'b': '<>!@#$%^&*()_+='})
+'a=%26+%22Simple+string%22&b=%3C%3E%21%40%23%24%25%5E%26%2A%28%29_%2B%3D'
+ >>>
+
+regards
+ Steve
+
+>
+>
+>See urllib.urlencode(). No idea why they don't include it in urllib2 as
+>well, but there you go.
+>
+> >>> from urllib import urlencode
+> >>> urlencode({'a':'& "Simple string"', 'b': '<>!@#$%^&*()_+='})
+>'a=%26+%22Simple+string%22&b=%3C%3E%21%40%23%24%25%5E%26%2A%28%29_%2B%3D'
+> >>>
+>
+>
+Hmm. urlencode is using quote_plus internally. Looks like there is no
+difference in the encoding of the apostrophe.
+I tried to create a very basic form and realized that the problem is NOT
+with the quoting.
+I'm writting a program that puts orders into a wholesaler's database.
+They do not have a programatic interface, so I have to login and post
+forms using a program.
+There are some fields that I must not change, so I have to read the
+value from the HTML source and then post it back.
+Here is the problem:
+
+<html>
+<body>
+<form method="POST">
+ <input name="name" value="Bessy&#39;s cat">
+ <input type="submit">
+</form>
+</body>
+</html>
+
+The values of some inputs are encoded using html entities.
+How can I decode a string like "Bessy&#39;s cat"  in "Bessy's cat"?
+
+Thanks,

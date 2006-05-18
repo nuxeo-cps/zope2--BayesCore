@@ -1,0 +1,89 @@
+Tokenizer
+_________
+
+:Revision: $Id$
+:Author: Tarek Ziadé
+
+TODO: remove the from `Products.BayesCore` dependency in the tests.
+
+Le module tokenizer est en charge d'effectuer un traitement sur les messages,
+pour en extraire une liste de lèmes.
+
+Chaque texte est traité en fonction de sa langue lorsque c'est possible.
+
+Tokenizer procède en 3 étapes:
+
+- éclatement du texte en mots et suppression des mots courts, suivant un seuil
+- application d'une liste de stop words
+- normalisation des mots restants
+- application d'un stemming
+
+Le code est organisé en suivant le principe d'une chaînes de transformations
+(design pattern: chain of responsibility):
+chaque étape est représentée par une classe qui réceptionne un élément
+à transformer et renvoie un résultat.
+
+Les implémentations font usage des modules C de zopyx.txng3 lorsque qu'ils
+sont disponibles.
+
+Ces classes respectent une interface particulière ::
+
+  >>> from Products.BayesCore.tokenizer.interfaces import ITextTransform
+  >>> from zope.interface.verify import verifyClass
+  >>> from Products.BayesCore.tokenizer.filters import (AllFilters,
+  ...                                                  TextSplitter,
+  ...                                                  StopWords,
+  ...                                                  Normalizer,
+  ...                                                  Stemmer)
+  >>> verifyClass(ITextTransform, AllFilters)
+  True
+  >>> verifyClass(ITextTransform, TextSplitter)
+  True
+  >>> verifyClass(ITextTransform, StopWords)
+  True
+  >>> verifyClass(ITextTransform, Normalizer)
+  True
+  >>> verifyClass(ITextTransform, Stemmer)
+  True
+
+Le tokenizer prend le rôle de director et compose sa chaine de transformation
+
+Le texte à transformer est le corps d'un mail::
+
+  >>> text = """
+  ... Zope est un serveur d'application complet, écrit principalement en Python
+  ... -- et en C pour certaines parties --,
+  ... disponible comme logiciel libre depuis 1998, date à laquelle
+  ... Digital Creation,
+  ... la société à l'origine du produit, l'a mis à disposition de la communauté.
+  ... Zope a rapidement évolué vers une version 2.
+  ... """
+
+- Filtre 1, éclatement en mots, et seuil
+- Filtre 2, application d'une liste de StopWords
+- Filtre 3, normalisation (ie retrait des accents, etc..)
+- Filtre 4, stemming des mots par le biais de pystemmer/snowball
+
+Application de la chaine de filtres::
+
+  >>> options = {'lang': 'fr', 'treshold': 3}
+  >>> from Products.BayesCore.tokenizer.filters import applyFilters
+  >>> filters = ('splitter', 'stopwords', 'normalizer', 'stemmer')
+  >>> changed_text = applyFilters(filters, text, options)
+
+Résultat du filtrage::
+
+  >>> ' '.join(changed_text)
+  u'zop un serveur appliqu complet ecrit principal en python et en certain part disponibl logiciel libr depuis 1998 dat laquel digital creation societ origin du produit mis disposit de communaut zop rapid evolu version'
+
+Application de la chaine de filtres en anglais::
+
+  >>> options = {'lang': 'en', 'treshold': 3}
+  >>> from Products.BayesCore.tokenizer.filters import applyFilters
+  >>> filters = ('splitter', 'stopwords', 'normalizer', 'stemmer')
+  >>> changed_text = applyFilters(filters, text, options)
+
+Résultat du filtrage en anglais::
+
+  >>> ' '.join(changed_text)
+  u'zope est un serveur applic complet ecrit principal en python et en pour certain parti dispon comm logiciel libr depui 1998 date laquell digit creation la societ origin du produit mis disposit de la communaut zope rapid evolu ver une version'

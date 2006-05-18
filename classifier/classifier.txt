@@ -1,0 +1,161 @@
+Classifier
+==========
+
+:Revision: $Id$
+:Author: Tarek Ziadé
+
+Le module classifier fournit un outil de classification par
+`inférence bayésienne`_. La probabilité est calculée par
+la méthode `Robinson-Fisher`_, décrite par Gary Fisher et basée
+sur le caclul de Fisher, utilisé initialement dans `PopF`.
+
+Le module est dépendant de l'interfaces de stockage `IBayesStorage`
+définie dans le module storage, et des interfaces de filtrage `ITextTransform`.
+
+Une interface `IBayesClassifier` est définie::
+
+  >>> from zope.interface.verify import verifyClass
+  >>> from Products.BayesCore.classifier.interfaces import IBayesClassifier
+
+Une seule implémentation est fournie, mais d'autres pourront être proposées::
+
+  >>> from Products.BayesCore.classifier.classifier import BayesClassifier
+  >>> verifyClass(IBayesClassifier, BayesClassifier)
+  True
+
+Cette implémentation est construite avec une chaîne de tokenizers et
+un objet de storage::
+
+  >>> from Products.BayesCore.tokenizer.filters import AllFilters
+  >>> from Products.BayesCore.storage.zodb import ZODBBayesStorage
+  >>> backend = ZODBBayesStorage()
+  >>> tokenizer = AllFilters()
+  >>> classifier = BayesClassifier('fr', backend, tokenizer)
+  >>> IBayesClassifier.providedBy(classifier)
+  True
+
+Le classificateur fait deux choses: apprendre et deviner, pour une langue
+donnée.
+
+Apprentissage::
+
+  >>> classifier.learn('Achetez du savon KIMOUSS', 'spam')
+  >>> classifier.learn('Salut, comment tu vas ?', 'friend')
+  >>> classifier.learn('KIMOUSS', 'spam')
+
+Le storage doit être rempli::
+
+  >>> words = list(backend.listWords())
+  >>> len(words)
+  8
+
+Et les catégories créées automatiquement::
+
+  >>> cats = list(backend.listCategories())
+  >>> cats.sort()
+  >>> cats
+  ['friend', 'spam']
+  >>> backend.getCategory('spam')
+  ('spam', '')
+
+Pour gérer la phase de reconnaissance, le classifier doit donner
+quelques informations::
+
+  >>> classifier.corpusSize()
+  9
+  >>> classifier.categorySize('spam')
+  5
+
+Le classifier calcul la propabilité pour chaque mot d'une catégorie,
+de faire partie du calcul (pour les mots qui sont dans n catégories::
+
+  >>> probs = classifier._buildCategoryWordProbabilities('spam').items()
+  >>> probs.sort()
+  >>> probs
+  [(u'achet', 0.99...), (u'du', 0.99...), (u'kimouss', 0.99...), (u'savon', 0.99...)]
+  >>> classifier.learn('savon kimouss par-ci, savon par-la, savon toujours', 'song')
+  >>> probs = classifier._buildCategoryWordProbabilities('spam').items()
+  >>> probs.sort()
+  >>> probs
+  [(u'achet', 0.99...), (u'du', 0.99...), (u'kimouss', 0.99...), (u'savon', 0.0001)]
+  >>> probs = classifier._buildCategoryWordProbabilities('song').items()
+  >>> probs.sort()
+  >>> probs
+  [(u'ci', 0.99...), (u'kimouss', 0.0001), (u'par', 0.99...), (u'savon', 0.99...), (u'toujour', 0.99...)]
+
+Ce calcul est fait pour toutes les catégories::
+
+  >>> probs = classifier._buildWordProbabilities().items()
+  >>> probs.sort()
+  >>> probs
+  [('friend', {...}), ('song', {...}), ('spam', {...})]
+
+
+La reconnaissance se base sur ce filtrage de mots, puis applque l'algo de Robinson-fisher::
+
+  >>> classifier.guess('achetez mon savon KIPOUSS')
+  [('song', 0.99...), ('spam', 0.5)]
+
+Reprenons un exemple concret pour vérifier que le classificateur marche bien,
+soit l'exemple de divmod pour Reverend::
+
+  >>> classifier = BayesClassifier('fr', backend, tokenizer, treshold=1)
+  >>> classifier.learn('le la les du un une je il elle de en', 'french')
+  >>> classifier.learn('der die das ein eine', 'german')
+  >>> classifier.learn('el uno una las de la en', 'spanish')
+  >>> classifier.learn('the rain in spain falls mainly on the plain', 'english')
+  >>> classifier.learn('the it she he they them are were to', 'english')
+
+Résultats::
+
+  >>> classifier.guess('they went to el cantina')
+  [('english', 0.999...), ('spanish', 0.999...)]
+  >>> classifier.guess('they were flying planes')
+  [('english', 0.999...)]
+
+Plus d'exemples, pour le plaisir :), un outil de reconnaissance
+de texte, qui sait faire la différence entre un fichier texte de type doctest et
+un fichier de code python::
+
+  >>> from Products import BayesCore
+  >>> import os
+  >>> root = os.path.dirname(BayesCore.__file__)
+  >>> file = os.path.join(root, 'classifier', 'interfaces.py')
+  >>> source = open(file).read()
+  >>> file = os.path.join(root, 'tokenizer', 'tokenizer.txt')
+  >>> texte = open(file).read()
+  >>> backend = ZODBBayesStorage()
+  >>> classifier = BayesClassifier('en', backend, tokenizer, treshold=2)
+  >>> classifier.learn(source, 'python')
+  >>> classifier.learn(texte, 'doctest')
+
+Saura-t-il reconnaitre `classifier.py` comme étant du code python ?
+
+  >>> file = os.path.join(root, 'classifier', 'classifier.py')
+  >>> source2 = open(file).read()
+  >>> classifier.guess(source2)
+  [('python', 0.9...), ('doctest', 0.5...)]
+
+Le classificateur doit aussi savoir `désapprendre`:
+
+  >>> cats = list(backend.listCategories())
+  >>> cats.sort()
+  >>> cats
+  ['doctest', 'python']
+  >>> classifier.unlearn(source, 'python')
+  >>> list(backend.listCategories())
+  ['doctest']
+
+Définitions
+___________
+
+_`inférence bayésienne`: On nomme inférence bayésienne la démarche logique
+permettant de calculer ou réviser la probabilité d'une hypothèse. Cette
+démarche est régie par l'utilisation de règles strictes de combinaison des
+probabilités, desquelles dérive le théorème de Bayes. Dans la perspective
+bayésienne, une probabilité n'est pas interprétée comme le passage à la
+limite d'une fréquence, mais plutôt comme la traduction numérique d'un état
+de connaissance (le degré de confiance accordé à une hypothèse, par exemple;
+(Wikipédia)
+
+.. _`PopF`: http://christophe.delord.free.fr/fr/popf/index.html

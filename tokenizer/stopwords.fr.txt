@@ -1,0 +1,12 @@
+# basic stopword file
+# will probably get TextIndexNG stopword
+# collection next
+# and be fine-tuned later
+est
+pour
+comme
+vers
+une
+le
+la
+les

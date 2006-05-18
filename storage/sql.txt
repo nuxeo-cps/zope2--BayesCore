@@ -1,0 +1,107 @@
+Storage SQL
+===========
+
+:Revision: $Id$
+:Author: Tarek Ziadé
+
+Ce module de test ne fonctionne que si la machine de test fournie une base sql
+fonctionnelle avec une base 'bayes' et un user 'cps', sans mot de
+passe.
+
+Un faux serveur sql sera codé si nécessaire par la suite.
+
+La classe respecte l'interface IBayesStorage aussi (cf. storage.txt)::
+
+  >>> from Products.BayesCore.storage.interfaces import IBayesStorage
+
+  >>> from zope.interface.verify import verifyClass
+  >>> from Products.BayesCore.storage.sql import SQLBayesStorage
+  >>> verifyClass(IBayesStorage, SQLBayesStorage)
+  True
+  >>> instance = SQLBayesStorage()
+  >>> IBayesStorage.providedBy(instance)
+  True
+  >>> instance.getStorageType()
+  'sql'
+
+Cette classe créé la structure dans la base de données MySQL si
+elle n'existe pas encore::
+
+  >>> import os
+  >>> from Products.BayesCore import storage
+  >>> root = os.path.dirname(storage.__file__)
+  >>> sqlconf = os.path.join(root, 'etc', 'sql.conf')
+  >>> backend = SQLBayesStorage(sqlconf, 'bayes-test', False)
+  >>> backend._verifyStructure()
+
+Puis offre les mêmes fonctionnalités que le backend ZODB:
+
+*** recopie des tests de storage.txt ***
+
+Le storage permet de gérer les langues::
+
+  >>> backend.addLanguage(u'fr', u'français')
+  >>> backend.addLanguage(u'en', u'english')
+  >>> backend.addLanguage(u'de', u'deutsch')
+  >>> langs = list(backend.listLanguages())
+  >>> langs.sort()
+  >>> langs
+  [u'de', u'en', u'fr']
+  >>> backend.getLanguage('fr')
+  u'fran\xe7ais'
+  >>> backend.delLanguage('fr')
+  >>> langs = list(backend.listLanguages())
+  >>> langs.sort()
+  >>> langs
+  [u'de', u'en']
+
+Les mots, en gérant un nombre d'occurences pour chaque::
+
+  >>> backend.addWord('pain', 'fr', ('boulangerie', 'repas'))
+  >>> list(backend.listWords('fr'))
+  ['pain']
+  >>> backend.getWord('pain')
+  (('fr',), {'repas': 1, 'boulangerie': 1}, 2)
+  >>> backend.addWord('pain', 'fr', 'boursin')
+  >>> backend.getWord('pain')
+  (('fr',), {'repas': 1, 'boursin': 1, 'boulangerie': 1}, 3)
+  >>> list(backend.listWords(complete=True))
+  [('pain', (('fr',), {'repas': 1, 'boursin': 1, 'boulangerie': 1}, 3))]
+  >>> backend.delWord('pain')
+  >>> list(backend.listWords('fr'))
+  []
+
+Et enfin les catégories::
+
+  >>> backend.addCategory('boulangerie', 'La Boulange',
+  ...                     'toute ce qui a attrait au pain')
+  >>> list(backend.listCategories())
+  ['boulangerie']
+  >>> backend.getCategory('boulangerie')
+  ('La Boulange', 'toute ce qui a attrait au pain')
+  >>> backend.delCategory('boulangerie')
+  >>> list(backend.listCategories())
+  []
+
+Le backend doit aussi savoir supprimer les occurences de mots,
+en gérant les répercussions sur les catégories ::
+
+  >>> backend.addWord('croissant', 'fr', 'boulangerie')
+  >>> backend.addWord('pain', 'fr', 'boulangerie')
+  >>> backend.wordCount('boulangerie')
+  2
+  >>> backend.delWord('pain', 'boulangerie')
+  >>> backend.wordCount('boulangerie')
+  1
+  >>> backend.delWord('croissant', 'boulangerie')
+  >>> list(backend.listCategories())
+  []
+
+Chargeons un peu la base::
+
+  >>> for i in range(100):
+  ...    backend.addWord(str(i), 'fr', 'words')
+  >>> backend.wordCount()
+  100
+
+

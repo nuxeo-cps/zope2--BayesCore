@@ -1,0 +1,3 @@
+# basic stopword file
+# will probably get TextIndexNG stopword
+# collection next

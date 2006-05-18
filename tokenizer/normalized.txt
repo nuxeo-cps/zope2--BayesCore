@@ -1,0 +1,10 @@
+# basic normalizer file
+# will probably get TextIndexNG normalizer
+# collection next
+# and be fine-tuned later
+é e
+è e
+à a
+ç c
+ù u
+# to be completed

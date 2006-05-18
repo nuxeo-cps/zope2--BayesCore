@@ -1,0 +1,14 @@
+We have a legacy device that exposes an RPC server. We have an RPCL
+defininition of its interface. We want to develop an RPC client of this
+interface in Python that will be usable in both Win32 and open systems
+environments.
+
+I can find some *very* dated references to a demo/rpc.py, but I can't find
+such a file on my Win Python install. There is an rpc.py in idle, but it
+doesn't seem to be a general purpose implementation. (I can find **lots** of
+references to xmlrpc.py, but the server predates all of this neato XML
+stuff. I also found the "Stackless" rpc.py; it wants to modify base Python.
+I'd rather not diverge from the stock Python.)
+
+Is there a Python module suitable for RPC client creation? Where? Why is
+this not a standard class? Are we nuts to pursue this course?
