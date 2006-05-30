@@ -1,4 +1,20 @@
 *******************************************
+** BayesCore V0.2.0 [R1 build 2006/05/30-21:50 by ogrisel]
+** SVN URL: https://svn.nuxeo.org/pub/Zope2/BayesCore/trunk Revision: 46038
+Requires:
+~~~~~~~~~
+-
+New features:
+~~~~~~~~~~~~~
+-
+Bug fixes:
+~~~~~~~~~~
+-
+New internal features:
+~~~~~~~~~~~~~~~~~~~~~~
+-
+
+*******************************************
 ** BayesCore V0.1.0 [R1 build 2006/04/10-16:24 by gracinet]
 ** SVN URL: http://svn/priv/DGME/BayesCore/trunk Revision: 32593
 Requires:
