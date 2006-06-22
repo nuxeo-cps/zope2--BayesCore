@@ -49,7 +49,15 @@ class TestClassifier(unittest.TestCase):
         self.assertEquals(res[0][0], 'nospam')
 
 def test_suite():
-    suites = [unittest.makeSuite(TestClassifier)]
+    suites = []
+
+    try:
+        from zopyx.txng3 import stemmer
+    except ImportError:
+        # module not available
+        return unittest.TestSuite(suites)
+
+    suites.append(unittest.makeSuite(TestClassifier))
     options = doctest.ELLIPSIS
     suites.append(doctest.DocFileTest('../classifier.txt',
                                       optionflags=doctest.ELLIPSIS))

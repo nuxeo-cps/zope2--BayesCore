@@ -23,6 +23,12 @@ def test_suite():
     options = doctest.ELLIPSIS
     tests = []
 
+    try:
+        from zopyx.txng3 import stemmer
+    except ImportError:
+        # module not available
+        return unittest.TestSuite(tests)
+ 
     tests.append(doctest.DocFileTest('tokenizer.txt',
                                      optionflags=doctest.ELLIPSIS))
 

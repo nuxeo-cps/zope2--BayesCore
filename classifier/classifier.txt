@@ -122,19 +122,22 @@ un fichier de code python::
   >>> root = os.path.dirname(BayesCore.__file__)
   >>> file = os.path.join(root, 'classifier', 'interfaces.py')
   >>> source = open(file).read()
+  >>> file = os.path.join(root, 'classifier', 'classifier.py')
+  >>> source2 = open(file).read()
   >>> file = os.path.join(root, 'tokenizer', 'tokenizer.txt')
   >>> texte = open(file).read()
   >>> backend = ZODBBayesStorage()
   >>> classifier = BayesClassifier('en', backend, tokenizer, treshold=2)
   >>> classifier.learn(source, 'python')
   >>> classifier.learn(texte, 'doctest')
-
+  >>> classifier.learn(source2, 'python')  
+ 
 Saura-t-il reconnaitre `classifier.py` comme étant du code python ?
 
   >>> file = os.path.join(root, 'classifier', 'classifier.py')
   >>> source2 = open(file).read()
   >>> classifier.guess(source2)
-  [('python', 0.9...), ('doctest', 0.5...)]
+  [('python', 1.0), ('doctest', 0.49...)]
 
 Le classificateur doit aussi savoir `désapprendre`:
 
@@ -143,6 +146,7 @@ Le classificateur doit aussi savoir `désapprendre`:
   >>> cats
   ['doctest', 'python']
   >>> classifier.unlearn(source, 'python')
+  >>> classifier.unlearn(source2, 'python')
   >>> list(backend.listCategories())
   ['doctest']
 

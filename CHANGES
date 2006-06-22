@@ -6,7 +6,10 @@ New features:
 -
 Bug fixes:
 ~~~~~~~~~~
--
+- fixed weak test on python/text learning in classifier.txt
+- made learning tests optionnal: if the stemme filter is not
+present, they are not ran
+
 New internal features:
 ~~~~~~~~~~~~~~~~~~~~~~
 -
