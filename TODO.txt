@@ -1,0 +1,2 @@
+- provide english doctests
+- use tnxg3 stopword function, instead of the home-made
