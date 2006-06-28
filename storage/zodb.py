@@ -45,7 +45,9 @@ class ZODBBayesStorage(Persistent):
 
     def addCategory(self, name, title, description=''):
         """ give the name of the filter """
-        self._categories[name] = (title, description)
+        if self._categories.get(name) != (title, description):
+            # ZODB optim: do not write if nothing to change
+            self._categories[name] = (title, description)
 
     def getCategory(self, name):
         """ get category infos """

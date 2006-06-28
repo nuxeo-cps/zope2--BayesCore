@@ -9,6 +9,8 @@ Bug fixes:
 - fixed weak test on python/text learning in classifier.txt
 - made learning tests optionnal: if the stemme filter is not
 present, they are not ran
+- ZODB optim: avoid do no write the _categories persistent mapping if not
+  required
 
 New internal features:
 ~~~~~~~~~~~~~~~~~~~~~~
