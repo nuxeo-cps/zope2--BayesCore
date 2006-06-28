@@ -17,7 +17,8 @@
 #
 # $Id$
 from zope.interface import implements
-from persistent import Persistent, dict
+from persistent import Persistent
+from BTrees.OOBTree import OOBTree
 from interfaces import IBayesStorage
 from register import registerStorageClass
 
@@ -26,9 +27,9 @@ class ZODBBayesStorage(Persistent):
     implements(IBayesStorage)
 
     def __init__(self, parameters=None):
-        self._categories = dict.PersistentDict()
-        self._languages = dict.PersistentDict()
-        self._words = dict.PersistentDict()
+        self._categories = OOBTree()
+        self._languages = OOBTree()
+        self._words = OOBTree()
         self.parameters = parameters
 
     @classmethod

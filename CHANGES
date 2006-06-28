@@ -14,4 +14,4 @@ present, they are not ran
 
 New internal features:
 ~~~~~~~~~~~~~~~~~~~~~~
--
+- ZODB storage now relies on OOBtrees
