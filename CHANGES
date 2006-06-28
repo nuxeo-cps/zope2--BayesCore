@@ -11,6 +11,8 @@ Bug fixes:
 present, they are not ran
 - ZODB optim: avoid do no write the _categories persistent mapping if not
   required
+- the filters will keep the type presented (str, or unicode) and
+not force to unicode, to avoid storage problems
 
 New internal features:
 ~~~~~~~~~~~~~~~~~~~~~~

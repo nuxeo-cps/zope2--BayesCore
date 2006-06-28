@@ -74,7 +74,7 @@ Application de la chaine de filtres::
 Résultat du filtrage::
 
   >>> ' '.join(changed_text)
-  u'zop un serveur appliqu complet ecrit principal en python et en certain part disponibl logiciel libr depuis 1998 dat laquel digital creation societ origin du produit mis disposit de communaut zop rapid evolu version'
+  'zop un serveur appliqu complet ecrit principal en python et en certain part disponibl logiciel libr depuis 1998 dat laquel digital creation societ origin du produit mis disposit de communaut zop rapid evolu version'
 
 Application de la chaine de filtres en anglais::
 
@@ -86,4 +86,4 @@ Application de la chaine de filtres en anglais::
 Résultat du filtrage en anglais::
 
   >>> ' '.join(changed_text)
-  u'zope est un serveur applic complet ecrit principal en python et en pour certain parti dispon comm logiciel libr depui 1998 date laquell digit creation la societ origin du produit mis disposit de la communaut zope rapid evolu ver une version'
+  'zope est un serveur applic complet ecrit principal en python et en pour certain parti dispon comm logiciel libr depui 1998 date laquell digit creation la societ origin du produit mis disposit de la communaut zope rapid evolu ver une version'

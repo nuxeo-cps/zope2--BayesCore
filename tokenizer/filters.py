@@ -49,7 +49,33 @@ class AllFilters(object):
         tokenizers = ('splitter', 'stopwords', 'normalizer', 'stemmer')
         return applyFilters(tokenizers, text, options)
 
-class TextSplitter(object):
+
+class BaseFilter(object):
+
+    def setInitialState(self, text, options):
+        if isinstance(text, list):
+            if len(text) > 0:
+                self.was_str = isinstance(text[0], str)
+            else:
+                self.was_str = false
+        else:
+            self.was_str = isinstance(text, str)
+
+        if 'charset' in options:
+            self.charset = options['charset']
+        else:
+            self.charset = 'ISO-8859-15'
+
+    def getFinalState(self, result):
+        if isinstance(result, list):
+            return [self.getFinalState(element) for element in result]
+        if isinstance(result, unicode) and self.was_str:
+            return result.encode(self.charset)
+        elif isinstance(result, str) and not self.was_str:
+            return result.decode(self.charset)
+        return result
+
+class TextSplitter(BaseFilter):
 
     implements(ITextTransform)
     name = 'splitter'
@@ -70,6 +96,7 @@ class TextSplitter(object):
 
     def transform(self, text, options):
         # removing unwanted character
+        self.setInitialState(text, options)
 
         try:
             from zopyx.txng3.splitter import Splitter
@@ -79,19 +106,22 @@ class TextSplitter(object):
 
         if zopyx:
             if 'treshold' in options:
-                return Splitter(singlechar=0).split(text)
+                return self.getFinalState([word for word in
+                                           Splitter(singlechar=0).split(text)])
             else:
-                return Splitter().split(text)
+                return self.getFinalState([word for word in
+                                           Splitter().split(text)])
 
         text = ''.join([self._cleanChar(char) for char in text])
+
         result = text.split()
 
         if 'treshold' in options:
             treshold = options['treshold']
-            return [word.lower() for word in result
-                    if len(word) >= treshold]
+            return self.getFinalState([word.lower() for word in result
+                                       if len(word) >= treshold])
         else:
-            return [word.lower() for word in result]
+            return self.getFinalState([word.lower() for word in result])
 
 registerFilter(TextSplitter())
 
@@ -131,7 +161,7 @@ class StopWords(object):
 
 registerFilter(StopWords())
 
-class Normalizer(object):
+class Normalizer(BaseFilter):
 
     implements(ITextTransform)
     name = 'normalizer'
@@ -170,6 +200,8 @@ class Normalizer(object):
         return ''.join(normalized)
 
     def transform(self, text, options):
+        self.setInitialState(text, options)
+
         if 'lang' not in options:
             return text
 
@@ -185,13 +217,15 @@ class Normalizer(object):
             zopyx = False
 
         if not zopyx:
-            return [self._normalize(word, table) for word in text]
+            result = [self._normalize(word, table) for word in text]
         else:
-            return normalizer.Normalizer(table.items()).normalize(text)
+            result = normalizer.Normalizer(table.items()).normalize(text)
+
+        return self.getFinalState(result)
 
 registerFilter(Normalizer())
 
-class Stemmer(object):
+class Stemmer(BaseFilter):
 
     implements(ITextTransform)
     name = 'stemmer'
@@ -213,8 +247,11 @@ class Stemmer(object):
         return None
 
     def transform(self, text, options):
+        self.setInitialState(text, options)
+
         if 'lang' not in options:
             return text
+
         if 'charset' not in options:
             charset = self.charset
         else:
@@ -223,25 +260,31 @@ class Stemmer(object):
         if isinstance(text, str) or isinstance(text, unicode):
             text = text.split()
 
+        def right_type(result):
+            if isinstance(result, unicode) and was_str:
+                return result.encode(charset)
+            elif isinstance(result, str) and not was_str:
+                return result.decode(charset)
+            return result
+
         def checktype(element):
             if isinstance(element, str):
                 return element.decode(charset)
             return element
 
-        text =  [checktype(element) for element in text]
+        text = [checktype(element) for element in text]
 
         try:
             from zopyx.txng3 import stemmer
         except ImportError:
             # module not available
-            return text
+            return self.getFinalState(text)
 
         lang = self.getStemmerLanguage(options['lang'])
         if lang not in stemmer.availableStemmers():
-            return text
+            return self.getFinalState(text)
 
         stemmer = stemmer.Stemmer(lang)
-
-        return stemmer.stem(text)
+        return self.getFinalState(stemmer.stem(text))
 
 registerFilter(Stemmer())

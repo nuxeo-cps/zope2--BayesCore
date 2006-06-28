@@ -72,16 +72,16 @@ de faire partie du calcul (pour les mots qui sont dans n catégories::
   >>> probs = classifier._buildCategoryWordProbabilities('spam').items()
   >>> probs.sort()
   >>> probs
-  [(u'achet', 0.99...), (u'du', 0.99...), (u'kimouss', 0.99...), (u'savon', 0.99...)]
+  [('achet', 0.99...), ('du', 0.99...), ('kimouss', 0.99...), ('savon', 0.99...)]
   >>> classifier.learn('savon kimouss par-ci, savon par-la, savon toujours', 'song')
   >>> probs = classifier._buildCategoryWordProbabilities('spam').items()
   >>> probs.sort()
   >>> probs
-  [(u'achet', 0.99...), (u'du', 0.99...), (u'kimouss', 0.99...), (u'savon', 0.0001)]
+  [('achet', 0.99...), ('du', 0.99...), ('kimouss', 0.99...), ('savon', 0.0001)]
   >>> probs = classifier._buildCategoryWordProbabilities('song').items()
   >>> probs.sort()
   >>> probs
-  [(u'ci', 0.99...), (u'kimouss', 0.0001), (u'par', 0.99...), (u'savon', 0.99...), (u'toujour', 0.99...)]
+  [('ci', 0.99...), ('kimouss', 0.0001), ('par', 0.99...), ('savon', 0.99...), ('toujour', 0.99...)]
 
 Ce calcul est fait pour toutes les catégories::
 
@@ -130,8 +130,8 @@ un fichier de code python::
   >>> classifier = BayesClassifier('en', backend, tokenizer, treshold=2)
   >>> classifier.learn(source, 'python')
   >>> classifier.learn(texte, 'doctest')
-  >>> classifier.learn(source2, 'python')  
- 
+  >>> classifier.learn(source2, 'python')
+
 Saura-t-il reconnaitre `classifier.py` comme étant du code python ?
 
   >>> file = os.path.join(root, 'classifier', 'classifier.py')
