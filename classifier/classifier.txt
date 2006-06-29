@@ -134,7 +134,7 @@ Saura-t-il reconnaitre `classifier.py` comme étant du code python ?
   >>> file = os.path.join(root, 'classifier', 'classifier.py')
   >>> source2 = open(file).read()
   >>> classifier.guess(source2)
-  [('python', 1.0), ('doctest', 1.6...e-16)]
+  [('python', 1.0), ('doctest', 0.0...)]
 
 Le classificateur doit aussi savoir `désapprendre`::
 
