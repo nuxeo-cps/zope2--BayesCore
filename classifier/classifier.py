@@ -16,7 +16,7 @@
 # 02111-1307, USA.
 #
 # $Id$
-""" Robinson-fisher method was taken from PopF
+"""Robinson-fisher method was taken from PopF
 """
 import math
 import operator
@@ -114,7 +114,6 @@ class BayesClassifier(object):
             S = 0.0
         return (1 + H - S) / 2
 
-
     def corpusSize(self, language=None):
         return self.backend.wordCount(language=language)
 
@@ -128,11 +127,12 @@ class BayesClassifier(object):
         return probs
 
     def _buildCategoryWordProbabilities(self, category, language=None):
-        """ merges corpora and computes probabilities
+        """Merges corpora and computes probabilities
 
-        XXX to be cached later (invalidation
-        on word adding)
+        XXX to be cached later (invalidation on word adding)
         """
+        if language is None:
+            language = self.language
         corpus_size = self.corpusSize(language)
         category_size = float(self.categorySize(category, language))
         them_count = float(max(corpus_size - category_size, 1))

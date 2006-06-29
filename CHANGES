@@ -16,4 +16,4 @@ not force to unicode, to avoid storage problems
 
 New internal features:
 ~~~~~~~~~~~~~~~~~~~~~~
-- ZODB storage now relies on OOBtrees
+- ZODB storage now relies on OOBtrees and BTrees.Length counters

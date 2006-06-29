@@ -27,17 +27,16 @@ if current_dir == '':
 files =  [file for file in os.listdir(current_dir)
           if file.endswith('.txt')]
 
+OPTIONS = doctest.NORMALIZE_WHITESPACE | doctest.ELLIPSIS
 
 def test_suite():
     options = doctest.ELLIPSIS
     tests = []
-    tests.append(doctest.DocFileTest('storage.txt',
-                                     optionflags=doctest.ELLIPSIS))
+    tests.append(doctest.DocFileTest('zodb.txt', optionflags=OPTIONS))
 
     try:
         import sqlobject
-        tests.append(doctest.DocFileTest('sql.txt',
-                                         optionflags=doctest.ELLIPSIS))
+        tests.append(doctest.DocFileTest('sql.txt', optionflags=OPTIONS))
     except ImportError:
         pass
 

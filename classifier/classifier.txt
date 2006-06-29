@@ -45,9 +45,8 @@ Apprentissage::
 
 Le storage doit être rempli::
 
-  >>> words = list(backend.listWords())
-  >>> len(words)
-  8
+  >>> backend.wordCount()
+  9
 
 Et les catégories créées automatiquement::
 
@@ -58,40 +57,37 @@ Et les catégories créées automatiquement::
   >>> backend.getCategory('spam')
   ('spam', '')
 
-Pour gérer la phase de reconnaissance, le classifier doit donner
-quelques informations::
+Pour gérer la phase de reconnaissance, le classifier doit donner quelques
+informations::
 
   >>> classifier.corpusSize()
   9
   >>> classifier.categorySize('spam')
   5
 
-Le classifier calcul la propabilité pour chaque mot d'une catégorie,
-de faire partie du calcul (pour les mots qui sont dans n catégories::
+Le classifier calcul la propabilité pour chaque mot d'une catégorie, de faire
+partie du calcul (pour les mots qui sont dans n catégories::
 
-  >>> probs = classifier._buildCategoryWordProbabilities('spam').items()
-  >>> probs.sort()
-  >>> probs
+  >>> sorted(classifier._buildCategoryWordProbabilities('spam').items()) #1
   [('achet', 0.99...), ('du', 0.99...), ('kimouss', 0.99...), ('savon', 0.99...)]
-  >>> classifier.learn('savon kimouss par-ci, savon par-la, savon toujours', 'song')
-  >>> probs = classifier._buildCategoryWordProbabilities('spam').items()
-  >>> probs.sort()
-  >>> probs
-  [('achet', 0.99...), ('du', 0.99...), ('kimouss', 0.99...), ('savon', 0.0001)]
-  >>> probs = classifier._buildCategoryWordProbabilities('song').items()
-  >>> probs.sort()
-  >>> probs
-  [('ci', 0.99...), ('kimouss', 0.0001), ('par', 0.99...), ('savon', 0.99...), ('toujour', 0.99...)]
+
+  >>> classifier.learn('savon kimouss par-ci, savon par-la, savon toujours',
+  ...                  'song')
+  >>> sorted(classifier._buildCategoryWordProbabilities('spam').items()) #2
+  [('achet', 0.99...), ('du', 0.99...), ('kimouss', 0.0001), ('savon', 0.0001)]
+
+  >>> sorted(classifier._buildCategoryWordProbabilities('song').items())
+  [('ci', 0.99...), ('kimouss', 0.0001), ('par', 0.99...), ('savon', 0.99...),
+   ('toujour', 0.99...)]
 
 Ce calcul est fait pour toutes les catégories::
 
-  >>> probs = classifier._buildWordProbabilities().items()
-  >>> probs.sort()
-  >>> probs
+  >>> sorted(classifier._buildWordProbabilities().items())
   [('friend', {...}), ('song', {...}), ('spam', {...})]
 
 
-La reconnaissance se base sur ce filtrage de mots, puis applque l'algo de Robinson-fisher::
+La reconnaissance se base sur ce filtrage de mots, puis applque l'algo de
+Robinson-fisher::
 
   >>> classifier.guess('achetez mon savon KIPOUSS')
   [('song', 0.99...), ('spam', 0.5)]
@@ -133,22 +129,20 @@ un fichier de code python::
   >>> classifier.learn(source2, 'python')
 
 Saura-t-il reconnaitre `classifier.py` comme étant du code python ?
+::
 
   >>> file = os.path.join(root, 'classifier', 'classifier.py')
   >>> source2 = open(file).read()
   >>> classifier.guess(source2)
-  [('python', 1.0), ('doctest', 0.49...)]
+  [('python', 1.0), ('doctest', 1.6...e-16)]
 
-Le classificateur doit aussi savoir `désapprendre`:
+Le classificateur doit aussi savoir `désapprendre`::
 
-  >>> cats = list(backend.listCategories())
-  >>> cats.sort()
-  >>> cats
-  ['doctest', 'python']
   >>> classifier.unlearn(source, 'python')
   >>> classifier.unlearn(source2, 'python')
-  >>> list(backend.listCategories())
-  ['doctest']
+  >>> classifier.guess(source2)
+  [('doctest', 1.0)]
+
 
 Définitions
 ___________

@@ -47,6 +47,7 @@ class TestClassifier(unittest.TestCase):
         res = list(classifier.guess(
                    self._getFileContent('no_spam_to_guess.txt')))
         self.assertEquals(res[0][0], 'nospam')
+OPTIONS = doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE
 
 def test_suite():
     suites = []
@@ -59,8 +60,7 @@ def test_suite():
 
     suites.append(unittest.makeSuite(TestClassifier))
     options = doctest.ELLIPSIS
-    suites.append(doctest.DocFileTest('../classifier.txt',
-                                      optionflags=doctest.ELLIPSIS))
+    suites.append(doctest.DocFileTest('../classifier.txt', optionflags=OPTIONS))
 
     return unittest.TestSuite(suites)
 

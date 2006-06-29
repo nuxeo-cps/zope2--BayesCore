@@ -224,15 +224,16 @@ class SQLBayesStorage(object):
 
         return tuple(langs), cats, int(word.word_count)
 
-    def getWord(self, word):
+    def getWord(self, word, language=None):
         """ get word infos """
+        # TODO: handle language
         results = Word.select(Word.q.word_label==word)
         if results.count() == 0:
             return None
         return self._reprWord(results[0])
 
-    def delWord(self, word, categories=None):
-        """ remove a word """
+    def delWord(self, word, categories=None, language=None):
+        """Remove a word"""
         results = Word.select(Word.q.word_label==word)
         if results.count() == 0:
             return None

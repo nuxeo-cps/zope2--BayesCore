@@ -1,0 +1,218 @@
+Storage
+=======
+
+:Revision: $Id$
+:Author: Tarek Ziadé
+
+TODO: remove the from `Products.BayesCore` dependency in the tests.
+TODO: why is this in french?
+
+Le module storage est en charge de fournir une interface de lecture et 
+d'écriture pour le contenu bayesien.
+
+Il se base sur une interface relativement simple et propose une architecture
+pluggable pour pouvoir implémenter tout type de backend.
+
+L'interface est la suivante::
+
+  >>> from Products.BayesCore.storage.interfaces import IBayesStorage
+
+Elle définie les apis à implémenter pour le backend.
+
+L'implémentation utilisée par défaut sera un backend MySQL mais
+un backend ZODB est également proposé.
+
+C'est celui-ci qui est présenté dans le doctest::
+
+  >>> from zope.interface.verify import verifyClass
+  >>> from Products.BayesCore.storage.zodb import ZODBBayesStorage
+
+`verifyClass` vérifie que les implémentations et l'interface évoluent
+toujours en accord::
+
+  >>> verifyClass(IBayesStorage, ZODBBayesStorage)
+  True
+  >>> backend = ZODBBayesStorage()
+  >>> IBayesStorage.providedBy(backend)
+  True
+  >>> backend.getStorageType()
+  'zodb'
+
+
+API de gestion des langues
+--------------------------
+
+Le storage permet de gérer les langues::
+
+  >>> backend.addLanguage(u'fr', u'francais')
+  >>> backend.addLanguage(u'en', u'english')
+  >>> backend.addLanguage(u'de', u'deutsch')
+
+  >>> sorted(backend.listLanguages())
+  [u'de', u'en', u'fr']
+  >>> backend.getLanguage('fr')
+  u'francais'
+
+  >>> backend.delLanguage('fr')
+  >>> sorted(backend.listLanguages())
+  [u'de', u'en']
+
+
+API de gestion des catégories
+-----------------------------
+::
+
+  >>> list(backend.listCategories())
+  []
+
+  >>> backend.addCategory('boulangerie', 'La Boulangerie',
+  ...                     'tout ce qui a trait au pain')
+  >>> backend.getCategory('boulangerie')
+  ('La Boulangerie', 'tout ce qui a trait au pain')
+
+  >>> backend.addCategory('truc', 'Le truc', 'Un peu comme la chose quoi')
+  >>> sorted(backend.listCategories())
+  ['boulangerie', 'truc']
+
+  >>> backend.delCategory('boulangerie')
+  >>> sorted(backend.listCategories())
+  ['truc']
+
+  >>> backend.delCategory('truc')
+  >>> sorted(backend.listCategories())
+  []
+
+API de comptage des occurences des mots
+--------------------------------------
+
+Les mots, en gérant un nombre d'occurences pour chaque catégorie::
+
+  >>> backend.addWord('pain', 'fr', ('boulangerie', 'repas'))
+  >>> sorted(backend.listWords('fr'))
+  ['pain']
+  >>> sorted(backend.listWords('fr', complete=True))
+  [('pain', (('fr',), {'repas': 1, 'boulangerie': 1}, 2))]
+  >>> backend.wordCount()
+  2
+  >>> backend.wordCount(category='boulangerie')
+  1
+
+Les catégories nécessaires sont créées au fur et à mesure::
+
+  >>> sorted(backend.listCategories())
+  ['boulangerie', 'repas']
+
+Les compteurs sont incrémentés au fur et à mesure de l'enregistrement de
+nouvelles occurences::
+
+  >>> backend.addWord('pain', 'fr', 'boursin')
+  >>> sorted(backend.listWords('fr', complete=True))
+  [('pain', (('fr',), {'repas': 1, 'boursin': 1, 'boulangerie': 1}, 3))]
+  >>> backend.wordCount()
+  3
+
+Cette API est multilingue, les compteurs d'occurences sont indépendants, même
+si la liste des catégories est partagée pour toutes les langues::
+
+  >>> backend.addWord('pain', 'en', ('bad', 'feeling'))
+  >>> backend.addWord('java', 'en', ('bad', 'coffee'))
+
+  >>> sorted(backend.listWords('fr', complete=True))
+  [('pain', (('fr',), {'repas': 1, 'boursin': 1, 'boulangerie': 1}, 3))]
+
+  >>> sorted(backend.listWords('en', complete=True))
+  [('java', (('en',), {'bad': 1, 'coffee': 1}, 2)),
+   ('pain', (('en',), {'bad': 1, 'feeling': 1}, 2))]
+
+  >>> backend.wordCount()
+  7
+  >>> backend.wordCount(language='en')
+  4
+  >>> backend.wordCount(category='bad')
+  2
+
+Il est possible de désapprendre en supprimant des associations::
+
+  >>> backend.delWord('pain', ('repas', 'boulangerie'))
+  >>> sorted(backend.listWords('fr', complete=True))
+  [('pain', (('fr',), {'boursin': 1}, 1))]
+
+  >>> backend.delWord('pain')
+  >>> sorted(backend.listWords('fr'))
+  []
+  >>> sorted(backend.listWords('en'))
+  ['java']
+
+Les catégories ne sont pas supprimées automatiquement::
+
+  >>> sorted(backend.listCategories())
+  ['bad', 'boulangerie', 'boursin', 'coffee', 'feeling', 'repas']
+
+Par contre, supprimer une catégorie, supprime aussi les occurences des mots
+associés::
+
+  >>> backend.addWord('pain', 'en', ('bad', 'feeling'))
+  >>> backend.delCategory('bad')
+  >>> sorted(backend.listWords('en', complete=True))
+  [('java', (('en',), {'coffee': 1}, 1)),
+   ('pain', (('en',), {'feeling': 1}, 1))]
+
+  >>> backend.delCategory('coffee')
+  >>> sorted(backend.listWords('en', complete=True))
+  [('pain', (('en',), {'feeling': 1}, 1))]
+
+  >>> backend.delCategory('feeling')
+  >>> backend.wordCount()
+  0
+
+TODO: tester l'API getWord (YAGNI ?)
+
+TODO: tester les interfaces (verifyClass)
+
+
+Tests de volumes
+----------------
+
+Chargeons un peu la base et déclenchons des commits pour vérifier que ca tient
+le coup::
+
+  >>> for i in range(10000):
+  ...    backend.addWord(str(i), 'fr', 'words')
+  >>> backend.wordCount()
+  10000
+
+  >>> import transaction
+  >>> transaction.commit()
+
+  >>> backend.delLanguage('fr')
+  >>> len(list(backend.listWords('fr')))
+  0
+
+  >>> transaction.commit()
+
+Vérifions que la suppression par catégorie fonctionne aussi::
+
+  >>> for i in range(10000):
+  ...    backend.addWord(str(i), 'fr', 'words')
+  >>> backend.wordCount()
+  10000
+
+  >>> transaction.commit()
+
+  >>> backend.delCategory('words')
+  >>> len(list(backend.listWords('fr')))
+  0
+
+  >>> transaction.commit()
+
+TODO: tester la resolution de conflit en s'inspirant des tests des BTrees.
+
+Enregistrement du backend
+-------------------------
+
+Un mécanisme de registering facilite l'utilisation du paquet::
+
+  >>> from Products.BayesCore.storage.register import getStorage
+  >>> storage = getStorage('zodb')
+  >>> isinstance(storage, ZODBBayesStorage)
+  True

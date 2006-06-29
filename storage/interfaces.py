@@ -55,14 +55,24 @@ class IWordStorage(Interface):
     def addWord(word, language, categories=()):
         """ add a word """
 
-    def getWord(word):
-        """ get word infos """
+    def getWord(word, language=None):
+        """Return storage data about word
 
-    def delWord(word, categories=None):
-        """ remove a word """
+        If language is given, return a list of pairs ('category', count) for
+        the given langauge.
+
+        Otherwise, return a dict with languages as keys and list of pairs as
+        values.
+        """
+
+    def delWord(word, categories=None, language=None):
+        """Remove a word
+
+        If language is specified, remove it only for that languiage.
+        """
 
     def wordCount(category=None, language=None):
-        """ give the corpus size """
+        """Give the corpus size"""
 
 class IBayesStorage(ICategoryStorage, ILangStorage, IWordStorage):
 
