@@ -70,7 +70,7 @@ class BaseFilter(object):
         if isinstance(result, list):
             return [self.getFinalState(element) for element in result]
         if isinstance(result, unicode) and self.was_str:
-            return result.encode(self.charset)
+            return result.encode(self.charset, "replace")
         elif isinstance(result, str) and not self.was_str:
             return result.decode(self.charset)
         return result
@@ -262,7 +262,7 @@ class Stemmer(BaseFilter):
 
         def right_type(result):
             if isinstance(result, unicode) and was_str:
-                return result.encode(charset)
+                return result.encode(charset, "replace")
             elif isinstance(result, str) and not was_str:
                 return result.decode(charset)
             return result
