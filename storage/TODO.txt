@@ -1,0 +1,21 @@
+implement with SQLAlchemy a non-mapping version
+with this structure
+
+class Word:
+    word_label = StringCol(length=50, notNone=True)
+    word_count = IntCol(notNone=False, default=0)
+    word_lang = StringCol(length=2, notNone=True)
+    word_category = StringCol(length=50, notNone=True)
+
+class Category:
+    category_label          = StringCol(length=50, notNone=True)
+    category_title          = StringCol(length=100, notNone=False, default='')
+    category_description    = StringCol(length=255, notNone=False, default='')
+
+class Lang:
+    lang_short_label        = StringCol(length=2, notNone=True)
+    lang_label              = StringCol(length=255, notNone=False, default='')
+
+
+
+
