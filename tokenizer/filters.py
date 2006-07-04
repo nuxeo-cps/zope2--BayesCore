@@ -57,7 +57,7 @@ class BaseFilter(object):
             if len(text) > 0:
                 self.was_str = isinstance(text[0], str)
             else:
-                self.was_str = false
+                self.was_str = False
         else:
             self.was_str = isinstance(text, str)
 
