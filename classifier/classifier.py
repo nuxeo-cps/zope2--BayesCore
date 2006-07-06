@@ -18,10 +18,13 @@
 # $Id$
 """Robinson-fisher method was taken from PopF
 """
+import logging
 import math
 import operator
 from zope.interface import implements
 from interfaces import IBayesClassifier
+
+logger = logging.getLogger('BayesCore.classifier')
 
 class BayesClassifier(object):
 
