@@ -1,4 +1,20 @@
 *******************************************
+** BayesCore V0.3.1 [R1 build 2006/07/06-15:11 by gracinet]
+** SVN URL: http://svn/pub/Zope2/BayesCore/trunk Revision: 46965
+Requires:
+~~~~~~~~~
+-
+New features:
+~~~~~~~~~~~~~
+-
+Bug fixes:
+~~~~~~~~~~
+-
+New internal features:
+~~~~~~~~~~~~~~~~~~~~~~
+-
+
+*******************************************
 ** BayesCore V0.3.0 [R1 build 2006/07/04-16:33 by gracinet]
 ** SVN URL: http://svn/pub/Zope2/BayesCore/trunk Revision: 46915
 Requires:
