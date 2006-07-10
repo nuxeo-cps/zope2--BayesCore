@@ -158,12 +158,14 @@ class BayesClassifier(object):
             else:
                 good_metric = min(1.0, other_count/category_size)
 
+            if them_count == 0:
+                continue
+
             bad_metric = min(1.0, cat_word_count/them_count)
 
             try:
                 f = bad_metric / (good_metric + bad_metric)
             except ZeroDivisionError:
-                logger.error("Got Division by zero, good_metric=%s, bad_metric=%s, word=%s", good_metric, bad_metric, word)
                 continue
 
             # PROBABILITY_THRESHOLD
